@@ -7,6 +7,15 @@ dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
 
 
+-- For getting large regions that don't cross mapgen block boundaries
+local region_mapblocks = 12 -- however many mapgen blocks you want the size of the region to be
+local mapgen_chunksize = tonumber(minetest.get_mapgen_setting("chunksize"))
+local region_size = region_mapblocks * mapgen_chunksize * 16
+-- For some reason, map chunks generate with -32, -32, -32 as the "origin" minp. To make the large-scale grid align with map chunks it needs to be offset like this.
+local get_region_corner = function(pos)
+	return {x = math.floor((pos.x+32) / region_size) * region_size - 32, z = math.floor((pos.z+32) / region_size) * region_size - 32}
+end
+
 -- Returns a consistent list of random points within a volume.
 -- Each call to this method will give the same set of points if the same parameters are provided
 mapgen_helper.get_random_points = function(minp, maxp, min_output_size, max_output_size)
