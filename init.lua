@@ -7,6 +7,21 @@ dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
 dofile(MP.."/region_functions.lua")
 
+
+mapgen_helper.biome_defs = nil
+mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome map, returns a biome definition.
+	if mapgen_helper.biome_defs == nil then
+		-- First time this was asked for, populate the table.
+		-- Biome registration is only done at load time so we don't have to worry about new biomes invalidating this table
+		mapgen_helper.biome_defs = {}
+		for name, desc in pairs(minetest.registered_biomes) do
+			local i = minetest.get_biome_id(desc.name)
+			mapgen_helper.biome_defs[i] = desc
+		end
+	end
+	return mapgen_helper.biome_defs[biome_id]
+end
+
 -- Returns a consistent list of random points within a volume.
 -- Each call to this method will give the same set of points if the same parameters are provided
 mapgen_helper.get_random_points = function(minp, maxp, min_output_size, max_output_size)

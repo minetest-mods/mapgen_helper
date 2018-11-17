@@ -1,10 +1,18 @@
 local map_data = {}
+local map_param2_data = {}
 local perlin_buffers = {}
 
-mapgen_helper.mapgen_voxelmanip = function()
+mapgen_helper.mapgen_vm_data = function()
 	local vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
 	vm:get_data(map_data)
 	return vm, map_data, VoxelArea:new{MinEdge=emin, MaxEdge=emax}
+end
+
+mapgen_helper.mapgen_vm_data_param2 = function()
+	local vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+	vm:get_data(map_data)
+	vm:get_param2_data(map_param2_data)
+	return vm, map_data, map_param2_data, VoxelArea:new{MinEdge=emin, MaxEdge=emax}
 end
 
 mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
