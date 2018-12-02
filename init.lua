@@ -2,6 +2,9 @@ mapgen_helper = {}
 
 mapgen_helper.mapgen_seed = tonumber(minetest.get_mapgen_setting("seed"))
 
+-- The "sidelen" used in almost every mapgen
+mapgen_helper.block_size = tonumber(minetest.get_mapgen_setting("chunksize")) * 16
+
 local MP = minetest.get_modpath(minetest.get_current_modname())
 dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
@@ -25,16 +28,15 @@ end
 -- Returns a consistent list of random points within a volume.
 -- Each call to this method will give the same set of points if the same parameters are provided
 mapgen_helper.get_random_points = function(minp, maxp, min_output_size, max_output_size)
-
 	local next_seed = math.random(1, 1000000000)
-	math.randomseed(minp.x + minp.y*2^4 + minp.z*2^8 + mapgen_helper.mapgen_seed)
+	math.randomseed(minetest.hash_node_position(minp) + mapgen_helper.mapgen_seed)
 	
 	local count = math.random(min_output_size, max_output_size)
 	local result = {}
 	while count > 0 do
 		local point = {}
 		point.x = math.random(minp.x, maxp.x)
-		point.x = math.random(minp.y, maxp.y)
+		point.y = math.random(minp.y, maxp.y)
 		point.z = math.random(minp.z, maxp.z)
 		table.insert(result, point)
 		count = count - 1

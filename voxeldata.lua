@@ -16,6 +16,7 @@ mapgen_helper.mapgen_vm_data_param2 = function()
 end
 
 mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
+	--minetest.debug(name..minetest.pos_to_string(minp)..minetest.pos_to_string(maxp))
 	local minx = minp.x
 	local minz = minp.z
 	local sidelen = maxp.x - minp.x + 1 --length of a mapblock
@@ -42,6 +43,44 @@ mapgen_helper.perlin2d = function(name, minp, maxp, perlin_params)
 	local nvals_perlin = perlin_buffers[name].nobj_perlin:get_2d_map_flat({x=minp.x, y=minp.z}, perlin_buffers[name].nvals_perlin_buffer)
 	
 	return nvals_perlin
+end
+
+-- similar to iter_xyz, but iterates first along the y axis. Useful in mapgens that want to detect a vertical transition (eg, finding ground level)
+function VoxelArea:iter_yxz(minx, miny, minz, maxx, maxy, maxz)
+	local i = self:index(minx, miny, minz) - self.ystride
+	
+	local x = minx
+	local y = miny - 1
+	local z = minz
+
+	return function()
+		y = y + 1
+
+		if y <= maxy then
+			i = i + self.ystride
+			return i, x, y, z
+		end
+		
+		y = miny
+		x = x + 1
+		
+		if x <= maxx then
+			i = self:index(x, y, z)
+			return i, x, y, z
+		end
+		
+		x = minx
+		z = z + 1
+		
+		if z <= maxz then
+			i = self:index(x, y, z)
+			return i, x, y, z
+		end
+	end
+end
+
+function VoxelArea:iterp_yxz(minp, maxp)
+	return self:iter_yxz(minp.x, minp.y, minp.z, maxp.x, maxp.y, maxp.z)
 end
 
 -- TODO: need a nice iterator for this kind of thing, check whether VoxelArea's can do this or if something custom will be needed

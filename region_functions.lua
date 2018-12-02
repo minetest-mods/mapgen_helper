@@ -7,8 +7,8 @@ mapgen_helper.get_region_minp_xz = function(pos_xz, mapblocks)
 	return {x = math.floor((pos.x+32) / region_size) * region_size - 32, y = 0, z = math.floor((pos.z+32) / region_size) * region_size - 32}
 end
 
--- Given a position and a grid scale, returns the minp corners of the four grids that the player is closest to.
--- For example, if we have a grid scale of 6 and the parameter position is at "*", the four points marked "R" would be returned.
+-- Given a position and a region scale, returns the minp corners of the four regions that the player is closest to.
+-- For example, if we have a region scale of 6 and the parameter position is at "*", the four points marked "R" would be returned.
 
 -- |-----|-----|-----|      |-----|-----|-----|      |-----|-----|-----|
 -- |     |     |     |      |     |     |     |      |     |     |     |
