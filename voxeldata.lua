@@ -83,10 +83,24 @@ function VoxelArea:iterp_yxz(minp, maxp)
 	return self:iter_yxz(minp.x, minp.y, minp.z, maxp.x, maxp.y, maxp.z)
 end
 
--- TODO: need a nice iterator for this kind of thing, check whether VoxelArea's can do this or if something custom will be needed
-mapgen_helper.index2d = function(minp, maxp, x, z) 
+mapgen_helper.index2dp = function(minp, maxp, x, z) 
 	return x - minp.x +
 		(maxp.x - minp.x + 1) -- sidelen
+		*(z - minp.z)
+		+ 1
+end
+
+-- Takes an index into a 3D area and returns the corresponding 2D index
+-- assumes equal edge lengths
+mapgen_helper.index2di = function(minp, maxp, area, vi)
+	local MinEdge = area.MinEdge
+	local zstride = area.zstride
+	local minpx = minp.x
+	i = vi - 1
+	local z = math.floor(i / zstride) + MinEdge.z
+	local x = math.floor((i % zstride) % area.ystride) + MinEdge.x
+	return x - minpx +
+		(maxp.x - minpx + 1) -- sidelen
 		*(z - minp.z)
 		+ 1
 end
