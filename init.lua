@@ -47,7 +47,7 @@ mapgen_helper.get_random_points = function(minp, maxp, min_output_size, max_outp
 end
 
 -- A cheap nearness test, using Manhattan distance.
-mapgen_helper.is_within_distance = function(pos1, pos2, distance)
+mapgen_helper.is_within_distance_box = function(pos1, pos2, distance)
 	return math.abs(pos1.x-pos2.x) <= distance and
 		math.abs(pos1.y-pos2.y) <= distance and
 		math.abs(pos1.z-pos2.z) <= distance
@@ -72,4 +72,18 @@ mapgen_helper.intersect = function(minpos1, maxpos1, minpos2, maxpos2)
 			}
 	end
 	return nil, nil
+end
+
+-- Returns a random value based on the x and z coordinates of pos, always the same for the same x and z
+mapgen_helper.xz_consistent_randomp = function(pos)
+	local next_seed = math.random(1, 1000000000000)
+	math.randomseed(pos.x + pos.z * 2 ^ 8)
+	local output = math.random()
+	math.randomseed(next_seed)
+	return output
+end
+
+mapgen_helper.xz_consistent_randomi = function(area, vi)
+	local pos = area:position(vi)
+	return mapgen_helper.xz_consistent_randomp(pos)
 end
