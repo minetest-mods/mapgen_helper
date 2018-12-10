@@ -9,7 +9,7 @@ local MP = minetest.get_modpath(minetest.get_current_modname())
 dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
 dofile(MP.."/region_functions.lua")
-
+dofile(MP.."/lines.lua")
 
 mapgen_helper.biome_defs = nil
 mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome map, returns a biome definition.
@@ -23,6 +23,14 @@ mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome m
 		end
 	end
 	return mapgen_helper.biome_defs[biome_id]
+end
+
+mapgen_helper.get_biome_def_i = function(biomemap, minp, maxp, area, vi)
+	if biomemap == nil then
+		return nil
+	end
+	local index2d = mapgen_helper.index2di(minp, maxp, area, vi)
+	return mapgen_helper.get_biome_def(biomemap[index2d])
 end
 
 -- Returns a consistent list of random points within a volume.
@@ -86,4 +94,16 @@ end
 mapgen_helper.xz_consistent_randomi = function(area, vi)
 	local pos = area:position(vi)
 	return mapgen_helper.xz_consistent_randomp(pos)
+end
+
+-- returns whether a content ID is "buildable to"
+local buildable_to
+mapgen_helper.is_buildable_to = function(c_node)
+	if buildable_to then return buildable_to[c_node] end
+	buildable_to = {}
+	for k, v in pairs(minetest.registered_nodes) do
+		if v.buildable_to then
+			buildable_to[minetest.get_content_id(k)] = true
+		end
+	end
 end
