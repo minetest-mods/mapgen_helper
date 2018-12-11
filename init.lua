@@ -98,12 +98,23 @@ end
 
 -- returns whether a content ID is "buildable to"
 local buildable_to
-mapgen_helper.is_buildable_to = function(c_node)
+mapgen_helper.buildable_to = function(c_node)
 	if buildable_to then return buildable_to[c_node] end
 	buildable_to = {}
 	for k, v in pairs(minetest.registered_nodes) do
 		if v.buildable_to then
 			buildable_to[minetest.get_content_id(k)] = true
+		end
+	end
+end
+
+local is_ground_content
+mapgen_helper.is_ground_content = function(c_node) -- If false, the cave generator will not carve through this node
+	if is_ground_content then return is_ground_content[c_node] end
+	is_ground_content = {}
+	for k, v in pairs(minetest.registered_nodes) do
+		if v.is_ground_content then
+			is_ground_content[minetest.get_content_id(k)] = true
 		end
 	end
 end

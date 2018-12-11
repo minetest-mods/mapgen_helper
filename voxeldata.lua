@@ -34,21 +34,19 @@ mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
 	local buffer = perlin_buffers[name]
 	
 	if buffer.sidelen ~= nil and buffer.sidelen ~= sidelen then
-		minetest.log("error", "mapgen_helper.register_perlin3d called for " .. name .. " with a chunk size that conflicts with a previous call.")
-	else
-		buffer.sidelen = sidelen
+		buffer.nobj_perlin = nil -- parameter changed, force regenerate of object
 	end
+	buffer.sidelen = sidelen
 	
 	if perlin_params then
 		if buffer.perlin_params then
 			for k, v in pairs(buffer.perlin_params) do
 				if perlin_params[k] ~= v then
-					minetest.log("error", "mapgen_helper.register_perlin3d called for " .. name .. " with parameters that conflict with a previous call.")
+					buffer.nobj_perlin = nil -- parameter changed, force regenerate of object
 				end
-			end			
-		else
-			buffer.perlin_params = perlin_params -- record provided parameters
+			end
 		end
+		buffer.perlin_params = perlin_params -- record provided parameters
 	elseif buffer.perlin_params == nil then
 		minetest.log("error", "mapgen_helper.register_perlin3d called for " .. name .. " with no registered or provided perlin parameters.")
 		return
@@ -57,7 +55,6 @@ mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
 	end
 	
 	buffer.nvals_perlin_buffer = buffer.nvals_perlin_buffer or {}
-	
 	buffer.nobj_perlin = buffer.nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
 	local nvals_perlin = buffer.nobj_perlin:get_3d_map_flat(minp, buffer.nvals_perlin_buffer) 
 	return nvals_perlin, VoxelArea:new{MinEdge=minp, MaxEdge=maxp}
