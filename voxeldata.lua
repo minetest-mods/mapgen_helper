@@ -117,6 +117,18 @@ function VoxelArea:get_y(i)
 	return math.floor(((i - 1) % self.zstride) / self.ystride) + self.MinEdge.y
 end
 
+-- Takes another voxelarea and an index in it and transforms it into an index into its own
+-- voxelarea, or nil if it's not in the voxelarea. This is useful when you've got, for example,
+-- a mapgen's voxelmanipulator and a perlin noise array covering the map block but not the entire
+-- emerged volume.
+function VoxelArea:transform(area, vi)
+	local pos = area:position(vi)
+	if self:containsp(pos) then
+		return self:indexp(pos)
+	end
+	return nil
+end
+
 mapgen_helper.index2d = function(minp, maxp, x, z) 
 	return x - minp.x +
 		(maxp.x - minp.x + 1) -- sidelen
