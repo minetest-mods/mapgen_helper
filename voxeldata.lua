@@ -117,17 +117,32 @@ function VoxelArea:get_y(i)
 	return math.floor(((i - 1) % self.zstride) / self.ystride) + self.MinEdge.y
 end
 
+-- Used to make transform more efficient by skipping a table creation
+function VoxelArea:position_xyz(vi)
+	local MinEdge = self.MinEdge
+	local Zstride = self.zstride
+	local Ystride = self.ystride
+	vi = vi - 1
+	local z = math.floor(vi / Zstride) + MinEdge.z
+	vi = vi % Zstride
+	local y = math.floor(vi / Ystride) + MinEdge.y
+	vi = vi % Ystride
+	local x = vi + MinEdge.x
+	return x, y, z
+end
+
 -- Takes another voxelarea and an index in it and transforms it into an index into its own
 -- voxelarea, or nil if it's not in the voxelarea. This is useful when you've got, for example,
 -- a mapgen's voxelmanipulator and a perlin noise array covering the map block but not the entire
 -- emerged volume.
 function VoxelArea:transform(area, vi)
-	local pos = area:position(vi)
-	if self:containsp(pos) then
-		return self:indexp(pos)
+	local x,y,z = area:position_xyz(vi)
+	if self:contains(x,y,z) then
+		return self:index(x,y,z)
 	end
 	return nil
 end
+
 
 mapgen_helper.index2d = function(minp, maxp, x, z) 
 	return x - minp.x +
