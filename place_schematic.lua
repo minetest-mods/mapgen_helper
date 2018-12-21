@@ -131,13 +131,13 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 
 	--	Adjust placement position if necessary
 	if flags.place_center_x then
-		pos.x = pos.x - (size_x - 1) / 2
+		pos.x = math.floor(pos.x - (size_x - 1) / 2)
 	end
 	if flags.place_center_y then
-		pos.y = pos.y - (size_y - 1) / 2
+		pos.y = math.floor(pos.y - (size_y - 1) / 2)
 	end
 	if flags.place_center_z then
-		pos.z = pos.z - (size_z - 1) / 2
+		pos.z = math.floor(pos.z - (size_z - 1) / 2)
 	end
 	
 	local minpos1 = pos
@@ -146,7 +146,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	local maxpos2 = area.MaxEdge
 	if not (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
 			minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z and
-			minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y) then		
+			minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y) then
 		return false -- the bounding boxes of the area and the schematic don't overlap
 	end	
 	
@@ -159,18 +159,17 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 				local i = z * i_step_z + y * ystride + i_start
 				for x = 0, size_x-1 do
 					local vi = area:index(pos.x + x, y_map, pos.z + z)
-					
 					if area:containsi(vi) then						
 						local node_def = schemdata[i]
 						local node_name = replacements[node_def.name] or node_def.name
 						if node_name ~= "ignore" then
 							local placement_prob = node_def.prob or 255
 							if placement_prob ~= 0 then
-								
+
 								local force_place_node = node_def.force_place
 								local place_on_condition = node_def.place_on_condition
 								local old_node_id = data[vi]
-								
+
 								if (force_placement or force_place_node
 									or (place_on_condition and place_on_condition(old_node_id))
 									or (not place_on_condition and (old_node_id == c_air or old_node_id == c_ignore)))
