@@ -56,6 +56,8 @@ local rotate_facedir_y =
 	[23] = {22, 21, 20} ,
 }
 
+local random_rotations = {0, 90, 180, 270}
+
 local rotate_param2 = function(param2, paramtype2, rotation)
 	param2 = param2 or 0
 	if paramtype2 == "facedir" then
@@ -88,6 +90,8 @@ end
 mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
 	replacements = replacements or {}
 	flags = flags or {}
+	if rotation == "random" then rotation = random_rotations[math.random(1,4)] end
+	
 	local schemdata = schematic.data
 	local slice_probs = schematic.yslice_prob or {}
 	
@@ -97,8 +101,8 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	local size_z = size.z
 
 	local xstride = 1
-	local ystride = size_x;
-	local zstride = size_x * size_y;
+	local ystride = size_x
+	local zstride = size_x * size_y
 
 	local i_start, i_step_x, i_step_z
 	if rotation == 90 then
