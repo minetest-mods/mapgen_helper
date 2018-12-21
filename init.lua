@@ -10,6 +10,7 @@ dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
 dofile(MP.."/region_functions.lua")
 dofile(MP.."/lines.lua")
+dofile(MP.."/place_schematic.lua")
 
 mapgen_helper.biome_defs = nil
 mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome map, returns a biome definition.
