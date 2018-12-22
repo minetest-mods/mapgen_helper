@@ -83,6 +83,20 @@ mapgen_helper.intersect = function(minpos1, maxpos1, minpos2, maxpos2)
 	return nil, nil
 end
 
+-- a simpler version of the above if all you care about is whether an intersection exists
+mapgen_helper.intersect_exists = function(minpos1, maxpos1, minpos2, maxpos2)
+	--checking x and z first since they're more likely to fail to overlap
+	return (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
+		minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z and
+		minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y)
+end
+
+-- A version of the above that only cares about the x and z parameters, useful for example to lay out non-overlapping trees or buildings
+mapgen_helper.intersect_exists_xz = function(minpos1, maxpos1, minpos2, maxpos2)
+	return (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
+		minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z)
+end
+
 -- Returns a random value based on the x and z coordinates of pos, always the same for the same x and z
 mapgen_helper.xz_consistent_randomp = function(pos)
 	local next_seed = math.random(1, 1000000000000)

@@ -87,6 +87,7 @@ end
 -- the rotation and flag parameters. Useful for testing whether a schematic will fit in a place before actually
 -- writing it to the data, so that you can abort and try something else instead.
 mapgen_helper.get_schematic_bounding_box = function(pos, schematic, rotation, flags)
+	flags = flags or {}
 	local size = schematic.size
 	local size_x = size.x
 	local size_y = size.y
