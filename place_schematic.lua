@@ -21,7 +21,6 @@
 --with this program; if not, write to the Free Software Foundation, Inc.,
 --51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
 local c_air = minetest.get_content_id("air")
 local c_ignore = minetest.get_content_id("ignore")
 
@@ -79,17 +78,80 @@ local rotate_param2 = function(param2, paramtype2, rotation)
 	return param2
 end
 
+
+local swap = function(size_x, size_z)
+	return size_z, size_x
+end
+
+-- Returns the minpos and maxpos of the bounding box that this schematic will be placed in given
+-- the rotation and flag parameters. Useful for testing whether a schematic will fit in a place before actually
+-- writing it to the data, so that you can abort and try something else instead.
+mapgen_helper.get_schematic_bounding_box = function(pos, schematic, rotation, flags)
+	local size = schematic.size
+	local size_x = size.x
+	local size_y = size.y
+	local size_z = size.z
+	local center_pos = schematic.center_pos
+	
+	if center_pos and rotation ~= nil and rotation ~= 0 then
+		center_pos = vector.new(center_pos) -- make a copy so we can mess with it without damaging the schematic
+		if rotation == 90 then
+			center_pos.x, center_pos.z = swap(size_x - center_pos.x - 1, center_pos.z)
+		elseif rotation == 180 then
+			center_pos.z = size_z - center_pos.z - 1
+			center_pos.x = size_x - center_pos.x - 1
+		elseif rotation == 270 then
+			center_pos.x, center_pos.z = swap(center_pos.x, size_z - center_pos.z - 1)
+		end
+	end
+
+	if rotation == 90 or rotation == 270 then
+		size_x, size_z = swap(size_x, size_z)
+	end
+	
+	local minpos = vector.new(pos)
+	
+	if center_pos then
+		if not flags.place_center_x then
+			minpos.x = minpos.x - center_pos.x
+		end
+		if not flags.place_center_y then
+			minpos.y = minpos.y - center_pos.y
+		end
+		if not flags.place_center_z then
+			minpos.z = minpos.z - center_pos.z
+		end
+	end	
+	if flags.place_center_x then
+		minpos.x = math.floor(minpos.x - (size_x - 1) / 2)
+	end
+	if flags.place_center_y then
+		minpos.y = math.floor(minpos.y - (size_y - 1) / 2)
+	end
+	if flags.place_center_z then
+		minpos.z = math.floor(minpos.z - (size_z - 1) / 2)
+	end
+	
+	local maxpos = vector.add(minpos, {x=size_x-1, y=size_y-1, z=size_z-1})
+
+	return minpos, maxpos
+end
+
 -- Takes a lua-format schematic and applies it to the data and param2_data arrays produced by vmanip instead of being applied to the vmanip directly. Useful in a mapgen loop that's doing other things with the data before and after applying schematics. A VoxelArea for the data also needs to be provided.
 
--- TODO: support all flags formats
+-- Schematic enhancements beyond the basic Minetest API that work with this:
+-- * node defs can have a "place_on_condition" property defined, which is a function that takes a node content ID parameter and returns true to indicate the schematic should replace it or false to indicate it should not. Useful for, for example, a schematic that should replace water but not stone (placing decorations on the bottom of the ocean), or a schematic that replaces all buildable_to nodes (to prevent tufts of grass from knocking holes in foundations). "data, area, vi" parameters are also provided if you want to get fancy and base the condition on surrounding nodes, but bear in mind that the schematic is in the process of being written already so some neighbors will already have been replaced with schematic nodes and some neighbors will be replaced in the future.
+-- * schematic can have a "center_pos" position defined relative to the placement pos that will be treated as the rotation and placement origin, unless overridden by the flags parameter
 
--- Enhancement: node defs can have a "place_on_condition" property defined, which is a function that takes a node content ID and returns true to indicate the schematic should replace it or false to indicate it should not. Useful for, for example, a schematic that should replace water but not stone, or a schematic that replaces all buildable_to nodes.
-
--- returns true if the schematic was entirely contained within the area, false otherwise.
+-- returns true if the schematic was entirely contained within the voxelarea, false otherwise.
 
 mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
 	replacements = replacements or {}
-	flags = flags or {}
+	flags = flags or {} -- TODO: support all flags formats
+	if flags.force_placement ~= nil then
+		force_placement = flags.force_placement -- TODO: unclear which force_placement parameter should have prededence here
+	end
+	local center_pos = schematic.center_pos
 	if rotation == "random" then rotation = random_rotations[math.random(1,4)] end
 	
 	local schemdata = schematic.data
@@ -104,14 +166,24 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	local ystride = size_x
 	local zstride = size_x * size_y
 
+	if center_pos and rotation ~= nil and rotation ~= 0 then
+		center_pos = vector.new(center_pos) -- make a copy so we can mess with it without damaging the schematic
+		if rotation == 90 then
+			center_pos.x, center_pos.z = swap(size_x - center_pos.x - 1, center_pos.z)
+		elseif rotation == 180 then
+			center_pos.z = size_z - center_pos.z - 1
+			center_pos.x = size_x - center_pos.x - 1
+		elseif rotation == 270 then
+			center_pos.x, center_pos.z = swap(center_pos.x, size_z - center_pos.z - 1)
+		end
+	end
+	
 	local i_start, i_step_x, i_step_z
 	if rotation == 90 then
 		i_start  = size_x
 		i_step_x = zstride
 		i_step_z = -xstride
-		local temp = size_x -- swap size_x and size_z
-		size_x = size_z
-		size_z = temp
+		size_x, size_z = swap(size_x, size_z)
 	elseif rotation == 180 then
 		i_start  = zstride * (size_z - 1) + size_x
 		i_step_x = -xstride
@@ -120,9 +192,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 		i_start  = zstride * (size_z - 1) + 1
 		i_step_x = -zstride
 		i_step_z = xstride
-		local temp = size_x -- swap size_x and size_z
-		size_x = size_z
-		size_z = temp
+		size_x, size_z = swap(size_x, size_z)
 	else
 		i_start = 1
 		i_step_x = xstride
@@ -130,6 +200,17 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	end
 
 	--	Adjust placement position if necessary
+	if center_pos then
+		if not flags.place_center_x then
+			pos.x = pos.x - center_pos.x
+		end
+		if not flags.place_center_y then
+			pos.y = pos.y - center_pos.y
+		end
+		if not flags.place_center_z then
+			pos.z = pos.z - center_pos.z
+		end
+	end	
 	if flags.place_center_x then
 		pos.x = math.floor(pos.x - (size_x - 1) / 2)
 	end
@@ -140,14 +221,13 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 		pos.z = math.floor(pos.z - (size_z - 1) / 2)
 	end
 	
-	local minpos1 = pos
-	local maxpos1 = vector.add(pos, {x=size_x-1, y=size_y-1, z=size_z-1})
-	local minpos2 = area.MinEdge
-	local maxpos2 = area.MaxEdge
-	if not (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
-			minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z and
-			minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y) then
-		return false -- the bounding boxes of the area and the schematic don't overlap
+	local maxpos = vector.add(pos, {x=size_x-1, y=size_y-1, z=size_z-1})
+	local minEdge = area.MinEdge
+	local maxEdge = area.MaxEdge
+	if not (pos.x <= maxEdge.x and maxpos.x >= minEdge.x and
+			pos.z <= maxEdge.z and maxpos.z >= minEdge.z and
+			pos.y <= maxEdge.y and maxpos.y >= minEdge.y) then
+		return false -- the bounding boxes of the area and the schematic don't overlap at all
 	end	
 	
 	local contained_in_area = true
@@ -171,7 +251,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 								local old_node_id = data[vi]
 
 								if (force_placement or force_place_node
-									or (place_on_condition and place_on_condition(old_node_id))
+									or (place_on_condition and place_on_condition(old_node_id, data, area, vi))
 									or (not place_on_condition and (old_node_id == c_air or old_node_id == c_ignore)))
 									and (placement_prob == 255 or math.random(1,255) <= placement_prob)
 								then
@@ -182,7 +262,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 							end
 						end
 					else
-						contained_in_area = false
+						contained_in_area = false -- schematic spilled over the edge of the area
 					end
 					i = i + i_step_x
 				end
