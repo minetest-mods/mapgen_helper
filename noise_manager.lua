@@ -34,7 +34,7 @@ local get_buffer = function(name, sidelen, perlin_params)
 		perlin_params = buffer.perlin_params -- retrieve recorded parameters
 	end
 	
-	return buffer
+	return buffer, perlin_params
 end
 
 mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
@@ -43,7 +43,7 @@ mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
 	local sidelen = maxp.x - minp.x + 1 --length of a mapblock
 	local chunk_lengths = {x = sidelen, y = sidelen, z = sidelen} --table of chunk edges
 
-	local buffer = get_buffer(name, sidelen, perlin_params)
+	local buffer, perlin_params = get_buffer(name, sidelen, perlin_params)
 	
 	buffer.nvals_perlin_buffer = buffer.nvals_perlin_buffer or {}
 	buffer.nobj_perlin = buffer.nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
@@ -57,7 +57,7 @@ mapgen_helper.perlin2d = function(name, minp, maxp, perlin_params)
 	local sidelen = maxp.x - minp.x + 1 --length of a mapblock
 	local chunk_lengths = {x = sidelen, y = sidelen, z = sidelen} --table of chunk edges
 
-	local buffer = get_buffer(name, sidelen, perlin_params)
+	local buffer, perlin_params = get_buffer(name, sidelen, perlin_params)
 	
 	perlin_buffers[name].nvals_perlin_buffer = perlin_buffers[name].nvals_perlin_buffer or {}
 	perlin_buffers[name].nobj_perlin = perlin_buffers[name].nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
