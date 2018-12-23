@@ -11,6 +11,25 @@ dofile(MP.."/voxeldata.lua")
 dofile(MP.."/region_functions.lua")
 dofile(MP.."/lines.lua")
 dofile(MP.."/place_schematic.lua")
+dofile(MP.."/noise_manager.lua")
+
+
+local map_data = {}
+local map_param2_data = {}
+
+mapgen_helper.mapgen_vm_data = function()
+	local vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+	vm:get_data(map_data)
+	return vm, map_data, VoxelArea:new{MinEdge=emin, MaxEdge=emax}
+end
+
+mapgen_helper.mapgen_vm_data_param2 = function()
+	local vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+	vm:get_data(map_data)
+	vm:get_param2_data(map_param2_data)
+	return vm, map_data, map_param2_data, VoxelArea:new{MinEdge=emin, MaxEdge=emax}
+end
+
 
 mapgen_helper.biome_defs = nil
 mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome map, returns a biome definition.
