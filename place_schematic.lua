@@ -71,7 +71,7 @@ local rotate_param2 = function(param2, paramtype2, rotation)
 		--TODO
 	elseif paramtype2 == "colorfacedir" then
 		--TODO
-	elseif paramtype2 == "colorfacedir" then
+	elseif paramtype2 == "colorwallmounted" then
 		--TODO
 	end
 

@@ -6,6 +6,8 @@ mapgen_helper.mapgen_seed = tonumber(minetest.get_mapgen_setting("seed"))
 mapgen_helper.block_size = tonumber(minetest.get_mapgen_setting("chunksize")) * 16
 
 local MP = minetest.get_modpath(minetest.get_current_modname())
+dofile(MP.."/bounding_boxes.lua")
+dofile(MP.."/random.lua")
 dofile(MP.."/voxelarea_iterator.lua")
 dofile(MP.."/voxeldata.lua")
 dofile(MP.."/region_functions.lua")
@@ -30,7 +32,6 @@ mapgen_helper.mapgen_vm_data_param2 = function()
 	return vm, map_data, map_param2_data, VoxelArea:new{MinEdge=emin, MaxEdge=emax}
 end
 
-
 mapgen_helper.biome_defs = nil
 mapgen_helper.get_biome_def = function(biome_id) -- given an id from the biome map, returns a biome definition.
 	if mapgen_helper.biome_defs == nil then
@@ -53,82 +54,6 @@ mapgen_helper.get_biome_def_i = function(biomemap, minp, maxp, area, vi)
 	return mapgen_helper.get_biome_def(biomemap[index2d])
 end
 
--- Returns a consistent list of random points within a volume.
--- Each call to this method will give the same set of points if the same parameters are provided
-mapgen_helper.get_random_points = function(minp, maxp, min_output_size, max_output_size)
-	local next_seed = math.random(1, 1000000000)
-	math.randomseed(minetest.hash_node_position(minp) + mapgen_helper.mapgen_seed)
-	
-	local count = math.random(min_output_size, max_output_size)
-	local result = {}
-	while count > 0 do
-		local point = {}
-		point.x = math.random(minp.x, maxp.x)
-		point.y = math.random(minp.y, maxp.y)
-		point.z = math.random(minp.z, maxp.z)
-		table.insert(result, point)
-		count = count - 1
-	end
-	
-	math.randomseed(next_seed)
-	return result
-end
-
--- A cheap nearness test, using Manhattan distance.
-mapgen_helper.is_within_distance_box = function(pos1, pos2, distance)
-	return math.abs(pos1.x-pos2.x) <= distance and
-		math.abs(pos1.y-pos2.y) <= distance and
-		math.abs(pos1.z-pos2.z) <= distance
-end
-
--- Finds an intersection between two axis-aligned bounding boxes (AABB)s, or nil if there's no overlap
-mapgen_helper.intersect = function(minpos1, maxpos1, minpos2, maxpos2)
-	--checking x and z first since they're more likely to fail to overlap
-	if minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
-		minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z and
-		minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y then
-		
-		return {
-				x = math.max(minpos1.x, minpos2.x),
-				y = math.max(minpos1.y, minpos2.y),
-				z = math.max(minpos1.z, minpos2.z)
-			},
-			{
-				x = math.min(maxpos1.x, maxpos2.x),
-				y = math.min(maxpos1.y, maxpos2.y),
-				z = math.min(maxpos1.z, maxpos2.z)
-			}
-	end
-	return nil, nil
-end
-
--- a simpler version of the above if all you care about is whether an intersection exists
-mapgen_helper.intersect_exists = function(minpos1, maxpos1, minpos2, maxpos2)
-	--checking x and z first since they're more likely to fail to overlap
-	return (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
-		minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z and
-		minpos1.y <= maxpos2.y and maxpos1.y >= minpos2.y)
-end
-
--- A version of the above that only cares about the x and z parameters, useful for example to lay out non-overlapping trees or buildings
-mapgen_helper.intersect_exists_xz = function(minpos1, maxpos1, minpos2, maxpos2)
-	return (minpos1.x <= maxpos2.x and maxpos1.x >= minpos2.x and
-		minpos1.z <= maxpos2.z and maxpos1.z >= minpos2.z)
-end
-
--- Returns a random value based on the x and z coordinates of pos, always the same for the same x and z
-mapgen_helper.xz_consistent_randomp = function(pos)
-	local next_seed = math.random(1, 1000000000000)
-	math.randomseed(pos.x + pos.z * 2 ^ 8)
-	local output = math.random()
-	math.randomseed(next_seed)
-	return output
-end
-
-mapgen_helper.xz_consistent_randomi = function(area, vi)
-	local pos = area:position(vi)
-	return mapgen_helper.xz_consistent_randomp(pos)
-end
 
 -- returns whether a content ID is "buildable to"
 local buildable_to
@@ -140,6 +65,7 @@ mapgen_helper.buildable_to = function(c_node)
 			buildable_to[minetest.get_content_id(k)] = true
 		end
 	end
+	return buildable_to[c_node]
 end
 
 local is_ground_content
@@ -151,4 +77,5 @@ mapgen_helper.is_ground_content = function(c_node) -- If false, the cave generat
 			is_ground_content[minetest.get_content_id(k)] = true
 		end
 	end
+	return is_ground_content[c_node]
 end

@@ -44,7 +44,7 @@ end
 -- returns the distance from v to the closest of the path forming line segments
 
 mapgen_helper.distance_to_path = function(v, path)
-	local minimum_distance = 2^16 -- Should be big enough for any practical minetest needs
+	local minimum_distance = 2^32 -- Should be big enough for any practical minetest needs
 	for i = 2, table.getn(path) do
 		local distance = mapgen_helper.distance_to_segment(path[i-1], path[i])
         if (distance < minimum_distance) then
@@ -53,9 +53,6 @@ mapgen_helper.distance_to_path = function(v, path)
 	end
 	return minimum_distance
 end
-
-
-
 
 
 -- For digging out straight lines
