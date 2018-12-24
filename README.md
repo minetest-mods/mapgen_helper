@@ -3,7 +3,7 @@ Mapgen Helper
 
 This mod provides a library of methods intended for use with other Minetest mapgen mods, automating routine tasks and giving tools to more easily perform mapgen operations. It's a bit of a random grab-bag, I put methods in here when I find that I use them frequently in other mods or when I just did a bunch of work solving a specific problem that could potentially be reused in future mods.
 
-Part of the purpose of this mod is to make sure these methods are as efficient as possible, allowing them to be used in mapgens or ABMs or other such contexts where speed is of the essence.
+Part of the purpose of this mod is to make sure these methods are as efficient as possible, allowing them to be used in mapgens or ABMs or other such contexts where speed is of the essence or where the code will be executed many millions of times. Several of these methods may seem trivial to accomplish already by using a combination of existing methods (for example `VoxelArea:get_y(vi)` can already be accomplished with `VoxelArea:position(i).y`) but in this mod they've been written to eliminate unnecessary intermediate steps and unused calculations.
 
 ## Voxel Manipulator methods
 
