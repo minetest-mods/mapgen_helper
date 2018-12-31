@@ -47,8 +47,11 @@ mapgen_helper.perlin3d = function(name, minp, maxp, perlin_params)
 	
 	buffer.nvals_perlin_buffer = buffer.nvals_perlin_buffer or {}
 	buffer.nobj_perlin = buffer.nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
-	local nvals_perlin = buffer.nobj_perlin:get_3d_map_flat(minp, buffer.nvals_perlin_buffer) 
-	return nvals_perlin, VoxelArea:new{MinEdge=minp, MaxEdge=maxp}
+	if buffer.nobj_perlin.get_3d_map_flat then
+		return buffer.nobj_perlin:get_3d_map_flat(minp, buffer.nvals_perlin_buffer), VoxelArea:new{MinEdge=minp, MaxEdge=maxp}
+	else
+		return buffer.nobj_perlin:get3dMap_flat(minp, buffer.nvals_perlin_buffer), VoxelArea:new{MinEdge=minp, MaxEdge=maxp}
+	end	
 end
 
 mapgen_helper.perlin2d = function(name, minp, maxp, perlin_params)
@@ -59,11 +62,13 @@ mapgen_helper.perlin2d = function(name, minp, maxp, perlin_params)
 
 	local buffer, perlin_params = get_buffer(name, sidelen, perlin_params)
 	
-	perlin_buffers[name].nvals_perlin_buffer = perlin_buffers[name].nvals_perlin_buffer or {}
-	perlin_buffers[name].nobj_perlin = perlin_buffers[name].nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
-	local nvals_perlin = perlin_buffers[name].nobj_perlin:get_2d_map_flat({x=minp.x, y=minp.z}, perlin_buffers[name].nvals_perlin_buffer)
-	
-	return nvals_perlin
+	buffer.nvals_perlin_buffer = perlin_buffers[name].nvals_perlin_buffer or {}
+	buffer.nobj_perlin = perlin_buffers[name].nobj_perlin or minetest.get_perlin_map(perlin_params, chunk_lengths)
+	if buffer.nobj_perlin.get_2d_map_flat then
+		return buffer.nobj_perlin:get_2d_map_flat({x=minp.x, y=minp.z}, perlin_buffers[name].nvals_perlin_buffer)
+	else
+		return buffer.nobj_perlin:get2dMap_flat({x=minp.x, y=minp.z}, perlin_buffers[name].nvals_perlin_buffer)
+	end	
 end
 
 mapgen_helper.index2d = function(minp, maxp, x, z) 

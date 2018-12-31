@@ -256,9 +256,14 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 									or (not place_on_condition and (old_node_id == c_air or old_node_id == c_ignore)))
 									and (placement_prob == 255 or math.random(1,255) <= placement_prob)
 								then
-									local paramtype2 = minetest.registered_nodes[node_name].paramtype2
-									data[vi] = minetest.get_content_id(node_name)
-									data_param2[vi] = rotate_param2(node_def.param2, paramtype2, rotation)			
+									local registered_def = minetest.registered_nodes[node_name]
+									if registered_def ~= nil then
+										local paramtype2 = registered_def.paramtype2
+										data[vi] = minetest.get_content_id(node_name)
+										data_param2[vi] = rotate_param2(node_def.param2, paramtype2, rotation)
+									else
+										minetest.log("error", "mapgen_helper.place_schematic was given a schematic with unregistered node " .. tostring(node_name) .. " in it.")
+									end
 								end
 							end
 						end
