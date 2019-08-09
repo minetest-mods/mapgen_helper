@@ -146,9 +146,11 @@ end
 
 -- returns true if the schematic was entirely contained within the voxelarea, false otherwise.
 
+local empty_table = {}
+
 mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
-	replacements = replacements or {}
-	flags = flags or {} -- TODO: support all flags formats
+	replacements = replacements or empty_table
+	flags = flags or empty_table -- TODO: support all flags formats
 	if flags.force_placement ~= nil then
 		force_placement = flags.force_placement -- TODO: unclear which force_placement parameter should have prededence here
 	end
@@ -232,6 +234,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	end	
 	
 	local contained_in_area = true
+	local on_place_callbacks = {}
 	
 	local y_map = pos.y
 	for y = 0, size_y-1 do
@@ -249,6 +252,7 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 
 								local force_place_node = node_def.force_place
 								local place_on_condition = node_def.place_on_condition
+								local on_place = node_def.on_place
 								local old_node_id = data[vi]
 
 								if (force_placement or force_place_node
@@ -261,6 +265,10 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 										local paramtype2 = registered_def.paramtype2
 										data[vi] = minetest.get_content_id(node_name)
 										data_param2[vi] = rotate_param2(node_def.param2, paramtype2, rotation)
+										
+										if on_place then
+											table.insert(on_place_callbacks, {on_place, vi})
+										end
 									else
 										minetest.log("error", "mapgen_helper.place_schematic was given a schematic with unregistered node " .. tostring(node_name) .. " in it.")
 									end
@@ -277,5 +285,24 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 		y_map = y_map + 1
 	end
 	
+	for k, callback in pairs(on_place_callbacks) do
+		callback[1](callback[2], data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
+	end
+	
 	return contained_in_area
+end
+
+-- wraps the above for convenience, so you can use this style of schematic in non-mapgen contexts as well
+mapgen_helper.place_schematic = function(pos, schematic, rotation, replacements, force_placement, flags)
+	local minpos, maxpos = mapgen_helper.get_schematic_bounding_box(pos, schematic, rotation, flags)
+	local vmanip = minetest.get_voxel_manip(minpos, maxpos)
+	local data = vmanip:get_data()
+	local data_param2 = vmanip:get_param2_data()
+	local emin, emax = vmanip:get_emerged_area()
+	local area = VoxelArea:new{MinEdge=emin, MaxEdge=emax}
+	local ret = mapgen_helper.place_schematic_on_data(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
+	vmanip:set_data(data)
+	vmanip:set_param2_data(data_param2)
+	vmanip:write_to_map()
+	return ret -- should always be true since we created the voxelarea to fit the schematic
 end
