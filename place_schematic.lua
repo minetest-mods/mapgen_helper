@@ -292,6 +292,16 @@ mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, s
 	return contained_in_area
 end
 
+-- aborts schematic placement if it won't fit into the provided data
+mapgen_helper.place_schematic_on_data_if_it_fits = function(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
+	local minbound, maxbound = mapgen_helper.get_schematic_bounding_box(pos, schematic, rotation, flags)
+	if mapgen_helper.is_box_within_box(minbound, maxbound, area.MinEdge, area.MaxEdge) then
+		return mapgen_helper.place_schematic_on_data(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
+	end
+	return false
+end
+
+
 -- wraps the above for convenience, so you can use this style of schematic in non-mapgen contexts as well
 mapgen_helper.place_schematic = function(pos, schematic, rotation, replacements, force_placement, flags)
 	local minpos, maxpos = mapgen_helper.get_schematic_bounding_box(pos, schematic, rotation, flags)
