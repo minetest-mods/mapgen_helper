@@ -149,6 +149,7 @@ end
 local empty_table = {}
 
 mapgen_helper.place_schematic_on_data = function(data, data_param2, area, pos, schematic, rotation, replacements, force_placement, flags)
+	pos = vector.new(pos)
 	replacements = replacements or empty_table
 	flags = flags or empty_table -- TODO: support all flags formats
 	if flags.force_placement ~= nil then
