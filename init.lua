@@ -14,6 +14,7 @@ dofile(MP.."/region_functions.lua")
 dofile(MP.."/lines.lua")
 dofile(MP.."/place_schematic.lua")
 dofile(MP.."/noise_manager.lua")
+dofile(MP.."/metrics.lua")
 
 
 local map_data = {}
