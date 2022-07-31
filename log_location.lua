@@ -25,6 +25,10 @@ local read_data = function()
 	if file then
 		local data = minetest.deserialize(file:read("*all"))
 		locations = data.locations or {}
+		-- to upgrade legacy data that didn't have counts recorded
+		for _, location in pairs(locations) do
+			location.count = location.count or 1
+		end
 		file:close()
 	else
 		locations = {}
@@ -32,13 +36,24 @@ local read_data = function()
 end
 read_data()
 
+-- logs only the first location of a particular type, ignores any subsequent ones
 mapgen_helper.log_first_location = function(name, pos, desc, notes)
 	if not locations[name] then
-		locations[name] = {pos=pos, desc=desc, notes=notes}
+		locations[name] = {pos=pos, desc=desc, notes=notes, count = 1}
 		minetest.log("info", "[mapgen_helper] recorded location " .. name .. " at " .. minetest.pos_to_string(pos) .. " with desc '" .. (desc or "") .. "'")
 		save_data()
 	end
 end
+
+mapgen_helper.log_location = function(name, pos, desc, notes)
+	local location = locations[name] or {pos=pos, desc=desc, notes=notes, count = 0}
+	locations[name] = location
+	location.pos = pos
+	location.desc = desc
+	location.notes = notes
+	location.count = location.count + 1
+end
+
 
 minetest.register_chatcommand("mapgen_helper_loc", {
 	params = "[location name]",
@@ -46,14 +61,14 @@ minetest.register_chatcommand("mapgen_helper_loc", {
 	privs = {server=true},
 	func = function(name, param)
 		if not param or param == "" then
-			minetest.chat_send_all("test locations available:")
+			minetest.chat_send_player(name,"test locations available:")
 			local names = {}
-			for name, loc in pairs(locations) do
-				table.insert(names, name)
+			for loc_name, loc in pairs(locations) do
+				table.insert(names, loc_name)
 			end
 			table.sort(names)			
-			for number, name in ipairs(names) do
-				minetest.chat_send_all("\t"..name .. " - " .. (locations[name].desc or ""))
+			for number, loc_name in ipairs(names) do
+				minetest.chat_send_player(name, "\t"..loc_name .. " - " .. (locations[loc_name].desc or "") .. " - " .. tostring(locations[loc_name].count))
 			end
 			return
 		end
