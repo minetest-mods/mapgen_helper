@@ -20,7 +20,7 @@ if persist then
 	local read_data = loadfile(worldpath.."/"..filename)
 	if read_data then
 		data = read_data()
-	end	
+	end
 end
 
 if data.resolution ~= nil and data.resolution ~= resolution then
@@ -44,7 +44,7 @@ mapgen_helper.record_time = function(label, time)
 	local counts = label_data.counts or {}
 	local existing_count = counts[time_slot] or 0
 	local total_time = label_data.total_time or 0
-	
+
 	counts[time_slot] = existing_count + 1
 	total_time = total_time + time
 	label_data.total_time = total_time
@@ -55,11 +55,11 @@ end
 minetest.register_on_shutdown(function()
 	if next(times) == nil then
 		return
-	end	
+	end
 	minetest.log("warning", "[mapgen_helper] Average chunk generation times:")
 	for name, label_data in pairs(times) do
 		minetest.log("warning", string.rep("-", 40))
-		
+
 		local min_slot
 		local max_slot
 		local highest_slot_count = 0
@@ -77,11 +77,11 @@ minetest.register_on_shutdown(function()
 				max_digits = #tostring(slot*resolution)
 			end
 			total_count = total_count + count
-			highest_slot_count = math.max(highest_slot_count, count)			
+			highest_slot_count = math.max(highest_slot_count, count)
 		end
-		
+
 		local average = label_data.total_time / total_count
-				
+
 		minetest.log("warning", "For " .. name .. ":")
 		if min_slot == max_slot then
 			minetest.log("warning", "All chunks took between " .. (min_slot-1)*resolution .. " and " .. min_slot*resolution .. " seconds.")
@@ -97,11 +97,11 @@ minetest.register_on_shutdown(function()
 					string.rep("=", math.ceil((count / highest_slot_count) * 40)) .. count_string)
 			end
 		end
-		
+
 		minetest.log("warning", "Total number of chunks: " .. total_count .. ". Average time per chunk: " .. average .. " seconds.")
 	end
 	minetest.log("warning", string.rep("-", 40))
-	
+
 	if persist then
 		local file, e = io.open(worldpath.."/"..filename, "w");
 		if not file then

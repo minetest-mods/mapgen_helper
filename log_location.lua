@@ -66,7 +66,7 @@ minetest.register_chatcommand("mapgen_helper_loc", {
 			for loc_name, loc in pairs(locations) do
 				table.insert(names, loc_name)
 			end
-			table.sort(names)			
+			table.sort(names)
 			for number, loc_name in ipairs(names) do
 				minetest.chat_send_player(name, "\t"..loc_name .. " - " .. (locations[loc_name].desc or "") .. " - " .. tostring(locations[loc_name].count))
 			end
@@ -90,12 +90,12 @@ minetest.register_chatcommand("mapgen_helper_tour", {
 	params = "<next|prev>",
 	description = "cycles through the various recorded mapgen test locations, forward or backward",
 	privs = {server=true},
-	func = function(name, param)
+	func = function(player_name, param)
 		local names = {}
 		for name, loc in pairs(locations) do
 			table.insert(names, name)
 		end
-		table.sort(names)			
+		table.sort(names)
 		if param == "prev" then
 			tour_index = tour_index - 1
 			if tour_index < 1 then
@@ -107,13 +107,13 @@ minetest.register_chatcommand("mapgen_helper_tour", {
 				tour_index = 1
 			end
 		end
-		
+
 		local loc = locations[names[tour_index]]
-		local player = minetest.get_player_by_name(name)
+		local player = minetest.get_player_by_name(player_name)
 		player:set_pos(loc.pos)
-		minetest.chat_send_player(name, "Teleport to test location " .. names[tour_index])
+		minetest.chat_send_player(player_name, "Teleport to test location " .. names[tour_index])
 		if loc.notes then
-			minetest.chat_send_player(name, loc.notes)
+			minetest.chat_send_player(player_name, loc.notes)
 		end
 	end
 })
